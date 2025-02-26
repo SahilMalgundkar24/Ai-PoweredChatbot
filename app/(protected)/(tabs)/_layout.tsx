@@ -29,68 +29,64 @@ const TabIcon = memo(({ Icon, focused }: TabIconProps) => {
 
 export default function RootLayout() {
   return (
-    <View
-      style={{ flex: 1, paddingHorizontal: 20, backgroundColor: "#1D202D" }}
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarHideOnKeyboard: true,
+        tabBarStyle: {
+          position: "absolute",
+          bottom: 20,
+          marginLeft: 50,
+          marginRight: 50,
+          backgroundColor: "#B2ACFB",
+          borderRadius: 100,
+          height: 65,
+          borderTopWidth: 0,
+        },
+        tabBarIconStyle: {
+          flex: 1,
+          justifyContent: "center",
+        },
+        tabBarShowLabel: false,
+        tabBarButton: (props) => (
+          <Pressable
+            {...props}
+            android_ripple={{ color: "transparent" }} // Disable ripple on Android
+            style={(state) => [
+              props.style,
+              { opacity: 1 }, // Keep opacity at 1 even when pressed
+            ]}
+          />
+        ),
+        header: () => null,
+      }}
     >
-      <Tabs
-        screenOptions={{
+      <Tabs.Screen
+        name="index"
+        options={{
           headerShown: false,
-          tabBarHideOnKeyboard: true,
-          tabBarStyle: {
-            position: "absolute",
-            bottom: 20,
-            marginLeft: 50,
-            marginRight: 50,
-            backgroundColor: "#B2ACFB",
-            borderRadius: 100,
-            height: 65,
-            borderTopWidth: 0,
-          },
-          tabBarIconStyle: {
-            flex: 1,
-            justifyContent: "center",
-          },
-          tabBarShowLabel: false,
-          tabBarButton: (props) => (
-            <Pressable
-              {...props}
-              android_ripple={{ color: "transparent" }} // Disable ripple on Android
-              style={(state) => [
-                props.style,
-                { opacity: 1 }, // Keep opacity at 1 even when pressed
-              ]}
-            />
+          tabBarIcon: ({ focused }) => (
+            <TabIcon Icon={Home2} focused={focused} />
           ),
-          header: () => null,
         }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{
-            headerShown: false,
-            tabBarIcon: ({ focused }) => (
-              <TabIcon Icon={Home2} focused={focused} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="create"
-          options={{
-            headerShown: false,
-            tabBarIcon: ({ focused }) => (
-              <TabIcon Icon={AddCircle} focused={focused} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <TabIcon Icon={Profile} focused={focused} />
-            ),
-          }}
-        />
-      </Tabs>
-    </View>
+      />
+      <Tabs.Screen
+        name="create"
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon Icon={AddCircle} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIcon Icon={Profile} focused={focused} />
+          ),
+        }}
+      />
+    </Tabs>
   );
 }

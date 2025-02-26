@@ -21,6 +21,7 @@ import {
 } from "firebase/firestore";
 import { firestore } from "@/config/firebase.config";
 import { useAuth } from "@/context/auth";
+import Constants from "expo-constants";
 
 export default function ChatScreen() {
   const { chatId, chatTitle } = useLocalSearchParams();
@@ -34,7 +35,9 @@ export default function ChatScreen() {
   const { user } = useAuth();
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const API = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+  const API =
+    Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY ||
+    process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
   // Load messages when component mounts
   useEffect(() => {

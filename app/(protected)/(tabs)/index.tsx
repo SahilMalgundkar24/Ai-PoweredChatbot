@@ -95,6 +95,7 @@ export default function Index() {
         height: "100%",
         backgroundColor: "#1D202D",
         paddingTop: 20,
+        paddingHorizontal: 20,
       }}
     >
       <Text style={{ color: "white", fontFamily: "Poppins", fontSize: 20 }}>

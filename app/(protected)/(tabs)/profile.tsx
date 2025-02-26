@@ -1,11 +1,33 @@
 import { View, Text, TouchableOpacity, Image } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { signOut } from "firebase/auth";
 import { auth } from "@/config/firebase.config";
 import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Profile() {
-  const userName = "John Doe";
+  const [userName, setUserName] = useState("User");
+
+  useEffect(() => {
+    async function getUserName() {
+      try {
+        const user = auth.currentUser;
+        if (user && user.displayName) {
+          setUserName(user.displayName);
+          return;
+        }
+
+        const storedName = await AsyncStorage.getItem("userName");
+        if (storedName) {
+          setUserName(storedName);
+        }
+      } catch (error) {
+        console.error("Error retrieving user name:", error);
+      }
+    }
+
+    getUserName();
+  }, []);
 
   const handleSignOut = () => {
     console.log("Signing out...");
