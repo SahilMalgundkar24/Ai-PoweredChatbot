@@ -1,11 +1,39 @@
-import { View, Text, Image, Touchable, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
-import { auth } from "@/config/firebase.config";
+import { auth, firestore } from "@/config/firebase.config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  limit,
+} from "firebase/firestore";
+import { Ionicons } from "@expo/vector-icons";
+
+// Define chat type interface
+interface ChatItem {
+  id: string;
+  title: string;
+  createdAt: {
+    toDate: () => Date;
+  };
+}
 
 export default function Index() {
   const [userName, setUserName] = useState("User");
+  const [chats, setChats] = useState<ChatItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const router = useRouter();
 
   useEffect(() => {
     async function getUserName() {
@@ -28,7 +56,38 @@ export default function Index() {
     getUserName();
   }, []);
 
-  const router = useRouter();
+  useEffect(() => {
+    const user = auth.currentUser;
+
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    // Fetch recent chats, limited to 3
+    const chatsRef = collection(firestore, `users/${user.uid}/chats`);
+    const chatsQuery = query(chatsRef, orderBy("createdAt", "desc"), limit(3));
+
+    const unsubscribe = onSnapshot(chatsQuery, (snapshot) => {
+      const chatsList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as ChatItem[];
+
+      setChats(chatsList);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleChatPress = (chatId: string, chatTitle: string) => {
+    router.push({
+      pathname: "/chatscreen",
+      params: { chatId, chatTitle },
+    });
+  };
+
   return (
     <View
       style={{
@@ -121,59 +180,86 @@ export default function Index() {
         </View>
       </View>
 
-      <Text
+      <View
         style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
           marginTop: 20,
-          fontFamily: "Poppins",
-          color: "white",
-          fontSize: 20,
         }}
       >
-        Your Recent Chats
-      </Text>
+        <Text
+          style={{
+            fontFamily: "Poppins",
+            color: "white",
+            fontSize: 20,
+          }}
+        >
+          Your Recent Chats
+        </Text>
+      </View>
 
-      <View
-        style={{
-          marginTop: 15,
-          width: "100%",
-          paddingHorizontal: 20,
-          paddingVertical: 15,
-          backgroundColor: "#252C39",
-          borderRadius: 15,
-        }}
-      >
-        <Text style={{ color: "white", fontFamily: "Poppins" }}>
-          Chat Title 1
-        </Text>
-      </View>
-      <View
-        style={{
-          marginTop: 15,
-          width: "100%",
-          paddingHorizontal: 20,
-          paddingVertical: 15,
-          backgroundColor: "#252C39",
-          borderRadius: 15,
-        }}
-      >
-        <Text style={{ color: "white", fontFamily: "Poppins" }}>
-          Chat Title 2
-        </Text>
-      </View>
-      <View
-        style={{
-          marginTop: 15,
-          width: "100%",
-          paddingHorizontal: 20,
-          paddingVertical: 15,
-          backgroundColor: "#252C39",
-          borderRadius: 15,
-        }}
-      >
-        <Text style={{ color: "white", fontFamily: "Poppins" }}>
-          Chat Title 1
-        </Text>
-      </View>
+      {loading ? (
+        <View style={{ marginTop: 15, alignItems: "center" }}>
+          <ActivityIndicator size="small" color="#B2ACFB" />
+          <Text
+            style={{ color: "#B2B2B2", marginTop: 5, fontFamily: "Poppins" }}
+          >
+            Loading chats...
+          </Text>
+        </View>
+      ) : chats.length === 0 ? (
+        <View style={{ marginTop: 15, alignItems: "center", padding: 20 }}>
+          <Text
+            style={{
+              color: "#B2B2B2",
+              fontFamily: "Poppins",
+              textAlign: "center",
+            }}
+          >
+            No chats yet. Start a new conversation!
+          </Text>
+        </View>
+      ) : (
+        <ScrollView style={{ marginTop: 10 }}>
+          {chats.map((chat) => (
+            <TouchableOpacity
+              key={chat.id}
+              style={{
+                marginTop: 10,
+                width: "100%",
+                paddingHorizontal: 20,
+                paddingVertical: 15,
+                backgroundColor: "#252C39",
+                borderRadius: 15,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+              onPress={() => handleChatPress(chat.id, chat.title)}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: "white", fontFamily: "Poppins" }}>
+                  {chat.title}
+                </Text>
+                {chat.createdAt && (
+                  <Text
+                    style={{
+                      color: "#B2B2B2",
+                      fontSize: 12,
+                      marginTop: 3,
+                      fontFamily: "Poppins",
+                    }}
+                  >
+                    {new Date(chat.createdAt.toDate()).toLocaleDateString()}
+                  </Text>
+                )}
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#B2ACFB" />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 }

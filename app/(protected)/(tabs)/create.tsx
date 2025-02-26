@@ -1,17 +1,48 @@
+// create.tsx
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import React, { useState } from "react";
 import { router } from "expo-router";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { firestore } from "@/config/firebase.config";
+import { useAuth } from "@/context/auth";
 
 export default function Create() {
   const [chatTitle, setChatTitle] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
-  const handleStartChat = () => {
+  const handleStartChat = async () => {
     if (!chatTitle.trim()) {
       Alert.alert("Oops!", "Please enter a chat title before starting.");
       return;
     }
-    console.log("Chat Started with title:", chatTitle);
-    router.push("/chatscreen");
+
+    if (!user) {
+      Alert.alert("Error", "You must be logged in to start a chat.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Create a new chat document in Firestore
+      const chatRef = collection(firestore, `users/${user.uid}/chats`);
+      const newChatDoc = await addDoc(chatRef, {
+        title: chatTitle,
+        createdAt: serverTimestamp(),
+      });
+
+      // Navigate to chat screen with the chat ID
+      router.push({
+        pathname: "/chatscreen",
+        params: { chatId: newChatDoc.id, chatTitle: chatTitle },
+      });
+    } catch (error) {
+      console.error("Error creating chat:", error);
+      Alert.alert("Error", "Failed to create chat. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,11 +91,13 @@ export default function Create() {
           paddingVertical: 12,
           paddingHorizontal: 30,
           borderRadius: 999,
+          opacity: loading ? 0.7 : 1,
         }}
         onPress={handleStartChat}
+        disabled={loading}
       >
         <Text style={{ color: "#1D202D", fontSize: 16, fontWeight: "bold" }}>
-          Start Chat
+          {loading ? "Creating..." : "Start Chat"}
         </Text>
       </TouchableOpacity>
     </View>

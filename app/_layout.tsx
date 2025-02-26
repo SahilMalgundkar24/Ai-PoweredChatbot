@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { StatusBar, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AuthProvider } from "@/context/auth";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -29,14 +30,16 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <StatusBar backgroundColor="#1D202D" barStyle="light-content" />
-      <View style={{ flex: 1, height: "100%" }}>
-        <Stack>
-          <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-          <Stack.Screen name="auth" options={{ headerShown: false }} />
-        </Stack>
-      </View>
-    </SafeAreaProvider>
+    <AuthProvider>
+      <SafeAreaProvider>
+        <StatusBar backgroundColor="#1D202D" barStyle="light-content" />
+        <View style={{ flex: 1, height: "100%" }}>
+          <Stack>
+            <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+            <Stack.Screen name="auth" options={{ headerShown: false }} />
+          </Stack>
+        </View>
+      </SafeAreaProvider>
+    </AuthProvider>
   );
 }
