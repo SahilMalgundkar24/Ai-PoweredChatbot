@@ -9,8 +9,13 @@ export default function Profile() {
 
   const handleSignOut = () => {
     console.log("Signing out...");
-    signOut(auth);
-    router.push("/auth/login");
+    signOut(auth)
+      .then(() => {
+        router.replace("/auth/login");
+      })
+      .catch((Error) => {
+        console.log("Error signing out:", Error);
+      });
   };
 
   return (

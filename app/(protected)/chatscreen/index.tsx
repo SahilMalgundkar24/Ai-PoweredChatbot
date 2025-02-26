@@ -50,7 +50,6 @@ export default function ChatScreen() {
         const chatDoc = await getDoc(chatRef);
 
         if (!chatDoc.exists()) {
-          // If chat doesn't exist, add welcome message
           await addDoc(messagesRef, {
             text: "Hello! How can I help you today?",
             sender: "bot",
@@ -91,7 +90,6 @@ export default function ChatScreen() {
     setLoading(true);
 
     try {
-      // Add user message to Firestore
       const chatRef = doc(firestore, `users/${user.uid}/chats/${chatId}`);
       const messagesRef = collection(chatRef, "messages");
 
@@ -101,7 +99,6 @@ export default function ChatScreen() {
         timestamp: serverTimestamp(),
       });
 
-      // Prepare the conversation history for Gemini API
       const historyMessages = messages.map((msg) => ({
         role: msg.sender === "user" ? "user" : "model",
         parts: [{ text: msg.text }],
@@ -113,7 +110,6 @@ export default function ChatScreen() {
         parts: [{ text: userMessageText }],
       });
 
-      // Get response from Gemini API
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API}`,
         {
@@ -130,7 +126,6 @@ export default function ChatScreen() {
         data?.candidates?.[0]?.content?.parts?.[0]?.text ||
         "Sorry, I couldn't process that.";
 
-      // Add bot response to Firestore
       await addDoc(messagesRef, {
         text: botResponseText,
         sender: "bot",
@@ -139,7 +134,6 @@ export default function ChatScreen() {
     } catch (error) {
       console.error("Error:", error);
 
-      // Add error message to Firestore
       const chatRef = doc(firestore, `users/${user.uid}/chats/${chatId}`);
       const messagesRef = collection(chatRef, "messages");
 
@@ -177,7 +171,6 @@ export default function ChatScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#1D202D", padding: 10 }}>
-      {/* Chat Title */}
       <View
         style={{
           alignItems: "center",
@@ -191,7 +184,6 @@ export default function ChatScreen() {
         </Text>
       </View>
 
-      {/* Chat Messages */}
       <ScrollView
         ref={scrollViewRef}
         style={{ flex: 1, marginBottom: 10 }}
@@ -219,7 +211,6 @@ export default function ChatScreen() {
         ))}
       </ScrollView>
 
-      {/* Loading Indicator */}
       {loading && (
         <ActivityIndicator
           size="small"
@@ -228,7 +219,6 @@ export default function ChatScreen() {
         />
       )}
 
-      {/* Input & Send Button */}
       <View
         style={{
           marginBottom: 10,
