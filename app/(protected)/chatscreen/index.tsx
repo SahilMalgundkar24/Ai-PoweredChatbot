@@ -22,6 +22,8 @@ import {
 import { firestore } from "@/config/firebase.config";
 import { useAuth } from "@/context/auth";
 import Constants from "expo-constants";
+import { shareAsync } from "expo-sharing";
+import * as FileSystem from "expo-file-system";
 
 export default function ChatScreen() {
   const { chatId, chatTitle } = useLocalSearchParams();
@@ -172,10 +174,53 @@ export default function ChatScreen() {
     );
   }
 
+  const generateSummary = async () => {
+    try {
+      setLoading(true);
+
+      const idToken = await user?.getIdToken();
+
+      const response = await fetch(
+        "http://192.168.0.102:5000/generate-summary",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({
+            userId: user?.uid,
+            chatId: chatId,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to generate summary");
+      }
+
+      if (data.summary) {
+        const fileUri = FileSystem.documentDirectory + "chat_summary.txt";
+        await FileSystem.writeAsStringAsync(fileUri, data.summary);
+        await shareAsync(fileUri);
+      }
+    } catch (error: unknown) {
+      console.error("Summary error:", error);
+      alert(
+        error instanceof Error ? error.message : "An unknown error occurred"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <View style={{ flex: 1, backgroundColor: "#1D202D", padding: 10 }}>
       <View
         style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
           alignItems: "center",
           padding: 10,
           borderBottomWidth: 1,
@@ -185,6 +230,22 @@ export default function ChatScreen() {
         <Text style={{ color: "white", fontSize: 18, fontWeight: "bold" }}>
           {chatTitle}
         </Text>
+
+        {/* Add this inside the input container */}
+        <TouchableOpacity
+          onPress={generateSummary}
+          style={{
+            backgroundColor: "#6C63FF",
+            padding: 10,
+            borderRadius: 99,
+            marginLeft: 5,
+          }}
+          disabled={loading}
+        >
+          <Text style={{ color: "white", fontWeight: "bold" }}>
+            Get Summary
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
